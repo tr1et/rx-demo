@@ -1,6 +1,7 @@
 import { Component } from 'react';
 import { objectOf, instanceOf } from 'prop-types';
 import { Layout, Row, Col } from 'antd';
+import { Subject } from 'rxjs';
 
 import { Store } from 'shared/services';
 
@@ -24,12 +25,18 @@ export class App extends Component {
     this.state = {
       likes: props.rxState.likes.value,
     };
+    this.unsubscribe$ = new Subject();
   }
 
   componentWillMount() {
     const { rxState } = this.props;
 
-    rxState.likes.$.subscribe(likes => this.setState({ likes }));
+    rxState.likes.$.takeUntil(this.unsubscribe$).subscribe(likes => this.setState({ likes }));
+  }
+
+  componentWillUnmount() {
+    this.unsubscribe$.next();
+    this.unsubscribe$.complete();
   }
 
   render() {

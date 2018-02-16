@@ -1,6 +1,7 @@
 import { Component, Fragment } from 'react';
 import { string, number, func, objectOf, instanceOf } from 'prop-types';
 import { Card, Icon, Avatar, Progress } from 'antd';
+import { Subject } from 'rxjs';
 import { clamp } from 'lodash';
 
 import { Store } from 'shared/services';
@@ -34,15 +35,21 @@ export class Post extends Component {
     };
     this.onIncrease = rxBind();
     this.onDecrease = rxBind();
+    this.unsubscribe$ = new Subject();
   }
 
   componentWillMount() {
     const { rxState, rxActions } = this.props;
 
-    this.onIncrease.$.subscribe(() => rxActions.changeLikes(1));
-    this.onDecrease.$.subscribe(() => rxActions.changeLikes(-1));
+    this.onIncrease.$.takeUntil(this.unsubscribe$).subscribe(() => rxActions.changeLikes(1));
+    this.onDecrease.$.takeUntil(this.unsubscribe$).subscribe(() => rxActions.changeLikes(-1));
 
-    rxState.likes.$.subscribe(likes => this.setState({ likes }));
+    rxState.likes.$.takeUntil(this.unsubscribe$).subscribe(likes => this.setState({ likes }));
+  }
+
+  componentWillUnmount() {
+    this.unsubscribe$.next();
+    this.unsubscribe$.complete();
   }
 
   render() {
