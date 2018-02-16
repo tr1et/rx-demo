@@ -7,7 +7,7 @@ export const Footer = (props) => {
 
   return (
     <Layout.Footer className={`footer center h3 ${props.className}`}>
-      Made by <Avatar src={avatarUrl} /> with{' '}
+      Made by <Avatar size="large" src={avatarUrl} /> with{' '}
       <span className="h1 bold" role="img" aria-label="Heart">
         🖤
       </span>{' '}

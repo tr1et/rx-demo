@@ -1,0 +1,19 @@
+.sider {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+
+  &__logo {
+    height: 32px;
+    margin: 16px;
+    color: white;
+    font-size: 24px;
+    font-weight: bold;
+    text-align: center;
+    line-height: 32px;
+  }
+
+  .ant-layout-sider-zero-width-trigger {
+    top: 32px;
+  }
+}
