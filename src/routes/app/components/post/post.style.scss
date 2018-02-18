@@ -1,0 +1,13 @@
+.post {
+  &__streak {
+    font-family: 'Lobster Two', cursive;
+    transition: transform 500ms ease;
+    text-shadow: 0 0 10px white;
+  }
+
+  &__like-button,
+  &__dislike-button {
+    padding: 15px 20px;
+    margin: -15px 0;
+  }
+}

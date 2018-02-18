@@ -19,10 +19,6 @@ export const Footer = (props) => {
   );
 };
 
-Footer.propTypes = {
-  className: string,
-};
+Footer.propTypes = { className: string };
 
-Footer.defaultProps = {
-  className: '',
-};
+Footer.defaultProps = { className: '' };

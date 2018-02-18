@@ -1,6 +1,7 @@
 import { render } from 'react-dom';
 import { AppContainer } from 'react-hot-loader';
-import 'basscss/css/basscss.min.css';
+
+import 'ace-css/css/ace.min.css';
 import 'antd/dist/antd.css';
 
 import './shared/style/index.scss';

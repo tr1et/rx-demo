@@ -15,10 +15,6 @@ export const Sider = props => (
   </Layout.Sider>
 );
 
-Sider.propTypes = {
-  className: string,
-};
+Sider.propTypes = { className: string };
 
-Sider.defaultProps = {
-  className: '',
-};
+Sider.defaultProps = { className: '' };

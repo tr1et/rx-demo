@@ -11,20 +11,14 @@ import { Footer, Post, Sider } from './components';
 import './app.style.scss';
 
 export class App extends Component {
-  static propTypes = {
-    rxState: objectOf(instanceOf(Store)),
-  };
+  static propTypes = { rxState: objectOf(instanceOf(Store)) };
 
-  static defaultProps = {
-    rxState: appRxState,
-  };
+  static defaultProps = { rxState: appRxState };
 
   constructor(props, context) {
     super(props, context);
 
-    this.state = {
-      likes: props.rxState.likes.value,
-    };
+    this.state = { likes: props.rxState.likes.value };
     this.unsubscribe$ = new Subject();
   }
 
