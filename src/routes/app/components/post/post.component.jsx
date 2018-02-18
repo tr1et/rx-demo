@@ -1,7 +1,7 @@
 import { Component, Fragment } from 'react';
 import { string, number, func, objectOf, instanceOf } from 'prop-types';
 import { Card, Icon, Avatar, Progress } from 'antd';
-import { Observable, Subject } from 'rxjs';
+import { Observable, Subject, BehaviorSubject } from 'rxjs';
 import { clamp } from 'lodash';
 
 import { Store } from 'shared/services';
@@ -11,6 +11,7 @@ import { postRxActions } from './post.action';
 import { postRxState } from './post.store';
 import {
   LIKE_STREAK_DEBOUNCE_TIME,
+  LIKE_STREAK_DECREASE_TIME,
   LIKE_STREAK_START_THRESHOLD,
   LIKE_STREAK_MULTIPLY_FACTOR,
   LIKE_STREAK_SPAN_MINIMUM_ZOOM,
@@ -57,31 +58,31 @@ export class Post extends Component {
    */
   componentWillMount() {
     // The changes to `likes` multiplied with streak factor
-    const multipliedChangesToLikes$ = this.changesToLikes$.withLatestFrom(
+    const multipliedChangesToLikesState$ = this.likesOrDislikes$.withLatestFrom(
       this.likeStreaks$,
       this.getMultipliedChangeOfLikes,
     );
 
     // Start a buffer of changes to `likes` state at the beginning
     // and reset everytime the streak end
-    const bufferedChangesToLikes$ = Observable.of('START')
-      .merge(this.endOfLikeStreak$)
-      .switchMap(() => multipliedChangesToLikes$.scan((buffer, change) => buffer + change, 0))
+    const bufferedChangesToLikesState$ = Observable.of('START')
+      .merge(this.stopLikesOrDislikes$)
+      .switchMap(() => multipliedChangesToLikesState$.scan((buffer, change) => buffer + change, 0))
       .share();
 
     // Dispatch the buffered `likes` changes to Rx store when the streak end
     // Used to reduce update requests to Rx state.
-    bufferedChangesToLikes$
-      .audit(() => this.endOfLikeStreak$)
+    bufferedChangesToLikesState$
+      .audit(() => this.stopLikesOrDislikes$)
       .subscribe(this.props.rxActions.changeLikes);
 
     // Update component state based on Rx `likes` state, the like streak and the current buffered
     // change
     Observable
       .combineLatest(
-        this.rxLikes$,
+        this.rxStateLikes$,
         this.likeStreaks$,
-        bufferedChangesToLikes$.merge(this.endOfLikeStreak$),
+        bufferedChangesToLikesState$.merge(this.stopLikesOrDislikes$),
         (likes, streak, buffer) => ({
           likes,
           streak,
@@ -111,7 +112,7 @@ export class Post extends Component {
    *
    * @memberOf Post
    */
-  get rxLikes$() {
+  get rxStateLikes$() {
     return this.props.rxState.likes.$.takeUntil(this.unsubscribe$);
   }
 
@@ -123,7 +124,7 @@ export class Post extends Component {
    *
    * @memberOf Post
    */
-  get changesToLikes$() {
+  get likesOrDislikes$() {
     // The observable of `like` click, map to the amount of adding likes
     const like$ = this.onIncrease.$.takeUntil(this.unsubscribe$).mapTo(1);
 
@@ -142,15 +143,15 @@ export class Post extends Component {
    *
    * @memberOf Post
    */
-  get endOfLikeStreak$() {
-    if (!this._endOfLikeStreak$) {
-      this._endOfLikeStreak$ = this.changesToLikes$
+  get stopLikesOrDislikes$() {
+    if (!this._stopLikesOrDislikes$) {
+      this._stopLikesOrDislikes$ = this.likesOrDislikes$
         .debounceTime(LIKE_STREAK_DEBOUNCE_TIME)
         .mapTo(0)
         .share();
     }
 
-    return this._endOfLikeStreak$;
+    return this._stopLikesOrDislikes$;
   }
 
   /**
@@ -162,15 +163,26 @@ export class Post extends Component {
    * @memberOf Post
    */
   get likeStreaks$() {
-    // The like streak, happen when there are many likes/dislikes continously in a short time
-    const likeStreak$ = Observable.of('START')
-      .merge(this.changesToLikes$)
-      .map((_, i) => i)
-      .takeUntil(this.endOfLikeStreak$);
+    if (!this._likeStreaks$) {
+      const likesObserver$ = new BehaviorSubject(0);
+      const likeStreak$ = likesObserver$.scan((streak, value) => streak + value, 0).share();
+      const likeStreakIsEmpty$ = likeStreak$.filter(streak => streak === 0);
 
-    // The like streaks, contains multiple like streaks. A like streak can only starts when
-    // the previous like streak has ended.
-    return this.changesToLikes$.exhaustMap(() => likeStreak$).merge(this.endOfLikeStreak$);
+      // The likes/dislikes will increase the streak
+      this.likesOrDislikes$.mapTo(1).subscribe(likesObserver$);
+
+      // The streak will decrease gradually when user stop like/dislike
+      this.stopLikesOrDislikes$
+        .switchMap(() => Observable
+          .interval(LIKE_STREAK_DECREASE_TIME)
+          .mapTo(-1)
+          .takeUntil(likeStreakIsEmpty$.merge(this.likesOrDislikes$)))
+        .subscribe(likesObserver$);
+
+      this._likeStreaks$ = likeStreak$;
+    }
+
+    return this._likeStreaks$;
   }
 
   /**
@@ -188,34 +200,59 @@ export class Post extends Component {
     change * (2 ** Math.floor(streak / LIKE_STREAK_MULTIPLY_FACTOR));
 
   /**
-   * Get the zoom level of the like streak span, with lower and upper cap
+   * Get the zoom level of the like streak number, with lower and upper cap
    *
    * @param {number} streak The current streak count
    * @returns {number} The zoom level of the span
    * @memberOf Post
    */
-  getLikeStreakSpanZoom = streak =>
+  getLikeStreakZoom = streak =>
     clamp(
       Math.floor(streak / LIKE_STREAK_MULTIPLY_FACTOR),
       LIKE_STREAK_SPAN_MAXIMUM_ZOOM - LIKE_STREAK_SPAN_MINIMUM_ZOOM,
     ) + LIKE_STREAK_SPAN_MINIMUM_ZOOM;
 
-  render() {
-    const { poster, avatar, title, message, maxLikes } = this.props;
+  /**
+   * Render the center span with present the likes number or the like streak
+   *
+   * @returns {Element}
+   *
+   * @memberOf Post
+   */
+  renderCenterSpan() {
     const { likes, streak, buffer } = this.state;
-    const percent = clamp(((likes + buffer) / maxLikes) * 100, 100);
-    const zoomScale = this.getLikeStreakSpanZoom(streak);
-    const centerSpan =
-      streak >= LIKE_STREAK_START_THRESHOLD ? (
+
+    if (streak < LIKE_STREAK_START_THRESHOLD) {
+      return <span className="post__likes-count center">+{likes + buffer}</span>;
+    }
+
+    const likeStreakZoom = this.getLikeStreakZoom(streak);
+    const likeStreakColor = buffer ? 'green' : 'red';
+
+    return (
+      <span>
         <span
-          className="post__streak z2 center inline-block red"
-          style={{ transform: `scale(${zoomScale}) translateY(-1em)` }}
+          className={`post__streak z2 center absolute inline-block ${likeStreakColor}`}
+          style={{ transform: `scale(${likeStreakZoom}) translateY(-1em)` }}
         >
-          x{streak} (+{buffer})
+          x{streak}
         </span>
-      ) : (
         <span className="post__likes-count center">+{likes + buffer}</span>
-      );
+      </span>
+    );
+  }
+
+  /**
+   * Render the component
+   *
+   * @returns {Element}
+   *
+   * @memberOf Post
+   */
+  render() {
+    const { likes, buffer } = this.state;
+    const { poster, avatar, title, message, maxLikes } = this.props;
+    const percent = clamp(((likes + buffer) / maxLikes) * 100, 100);
 
     return (
       <Fragment>
@@ -223,7 +260,7 @@ export class Post extends Component {
           cover={<img alt="poster" src={poster} />}
           actions={[
             <Icon className="post__like-button" type="like-o" onClick={this.onIncrease} />,
-            centerSpan,
+            this.renderCenterSpan(),
             <Icon className="post__dislike-button" type="dislike-o" onClick={this.onDecrease} />,
           ]}
         >
