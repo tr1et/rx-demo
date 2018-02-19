@@ -1,9 +1,7 @@
 import { Component } from 'react';
 import { objectOf, instanceOf } from 'prop-types';
 import { Layout, Row, Col } from 'antd';
-import { Subject } from 'rxjs';
-
-import { Store } from 'shared/services';
+import { Observable, Subject } from 'rxjs';
 
 import { appRxState } from './app.store';
 import { CARD_POSTER_IMAGE, AVATAR_IMAGE, MAX_LIKES, CARD_TITLE, CARD_MESSAGE } from './app.constant';
@@ -11,21 +9,21 @@ import { Footer, Post, Sider } from './components';
 import './app.style.scss';
 
 export class App extends Component {
-  static propTypes = { rxState: objectOf(instanceOf(Store)) };
+  static propTypes = { rxState: objectOf(instanceOf(Observable)) };
 
   static defaultProps = { rxState: appRxState };
 
   constructor(props, context) {
     super(props, context);
 
-    this.state = { likes: props.rxState.likes.value };
+    this.state = { likes: 0 };
     this.unsubscribe$ = new Subject();
   }
 
   componentWillMount() {
     const { rxState } = this.props;
 
-    rxState.likes.$.takeUntil(this.unsubscribe$).subscribe(likes => this.setState({ likes }));
+    rxState.likes$.takeUntil(this.unsubscribe$).subscribe(likes => this.setState({ likes }));
   }
 
   componentWillUnmount() {

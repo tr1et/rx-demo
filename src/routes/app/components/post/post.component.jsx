@@ -4,7 +4,6 @@ import { Card, Icon, Avatar, Progress } from 'antd';
 import { Observable, Subject, BehaviorSubject } from 'rxjs';
 import { clamp } from 'lodash';
 
-import { Store } from 'shared/services';
 import { rxBind } from 'shared/utilities';
 
 import { postRxActions } from './post.action';
@@ -26,7 +25,7 @@ export class Post extends Component {
     title: string.isRequired,
     message: string,
     maxLikes: number.isRequired,
-    rxState: objectOf(instanceOf(Store)),
+    rxState: objectOf(instanceOf(Observable)),
     rxActions: objectOf(func),
   };
 
@@ -40,7 +39,7 @@ export class Post extends Component {
     super(props, context);
 
     this.state = {
-      likes: props.rxState.likes.value,
+      likes: 0,
       streak: 0,
       buffer: 0,
     };
@@ -79,16 +78,12 @@ export class Post extends Component {
     // Update component state based on Rx `likes` state, the like streak and the current buffered
     // change
     Observable
-      .combineLatest(
-        this.rxStateLikes$,
-        this.likeStreaks$,
-        bufferedChangesToLikesState$.merge(this.stopLikesOrDislikes$),
-        (likes, streak, buffer) => ({
-          likes,
-          streak,
-          buffer,
-        }),
+      .merge(
+        this.rxStateLikes$.map(likes => ({ likes })),
+        this.likeStreaks$.map(streak => ({ streak })),
+        bufferedChangesToLikesState$.merge(this.stopLikesOrDislikes$).map(buffer => ({ buffer })),
       )
+      .scan((state, newState) => ({ ...state, ...newState }), {})
       .debounceTime(0)
       .subscribe(newState => this.setState(newState));
   }
@@ -113,7 +108,7 @@ export class Post extends Component {
    * @memberOf Post
    */
   get rxStateLikes$() {
-    return this.props.rxState.likes.$.takeUntil(this.unsubscribe$);
+    return this.props.rxState.likes$.takeUntil(this.unsubscribe$);
   }
 
   /**

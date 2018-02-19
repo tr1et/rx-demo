@@ -15,4 +15,4 @@ export const likes = new Store([APP_STATE, APP_STATE_LIKES], APP_STATE_LIKES_DEF
   (currentLikes, { payload: changeAmount = 0 }) => clamp(currentLikes + changeAmount, MAX_LIKES),
 );
 
-export const appRxState = { likes };
+export const appRxState = { likes$: likes.$ };

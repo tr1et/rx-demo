@@ -1,3 +1,3 @@
 import { likes } from '../../app.store';
 
-export const postRxState = { likes };
+export const postRxState = { likes$: likes.$ };
