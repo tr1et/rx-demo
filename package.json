@@ -11,13 +11,17 @@
     "test": "neutrino test --ci "
   },
   "keywords": [],
-  "author": "lehoang03triet@gmail.com",
-  "license": "MIT",
+  "author": {
+    "email": "lehoangtriet@gmail.com",
+    "name": "Triet Hoang Le"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://tr1et@bitbucket.org/tr1et/rx-demo.git"
+  },
+  "license": "UNLICENSED",
+  "private": true,
   "dependencies": {
-    "@neutrinojs/chunk": "8.1.1",
-    "@neutrinojs/pwa": "8.1.1",
-    "@neutrinojs/style-loader": "8.1.1",
-    "@neutrinojs/stylelint": "8.1.1",
     "ace-css": "1.1.0",
     "antd": "3.2.1",
     "classnames": "2.2.5",
@@ -31,18 +35,22 @@
   },
   "devDependencies": {
     "@neutrinojs/airbnb": "8.1.1",
+    "@neutrinojs/chunk": "8.1.1",
     "@neutrinojs/image-loader": "8.1.1",
     "@neutrinojs/jest": "8.1.1",
+    "@neutrinojs/pwa": "8.1.1",
     "@neutrinojs/react": "8.1.1",
+    "@neutrinojs/stylelint": "8.1.1",
+    "@neutrinojs/style-loader": "8.1.1",
     "cz-conventional-changelog": "2.1.0",
     "enzyme": "3.3.0",
     "enzyme-adapter-react-16": "1.1.1",
     "eslint-config-airbnb": "16.1.0",
     "eslint-plugin-import": "2.8.0",
     "eslint-plugin-jsx-a11y": "6.0.3",
-    "eslint-plugin-react": "7.6.1",
+    "eslint-plugin-react": "7.7.0",
     "faker": "4.1.0",
-    "jest": "22.3.0",
+    "jest": "22.4.0",
     "jest-each": "0.3.1",
     "jest-enzyme": "4.2.0",
     "jest-serializer-html": "5.0.0",
@@ -55,7 +63,7 @@
     "rx-sandbox": "0.0.10",
     "sass-loader": "6.0.6",
     "sinon": "4.3.0",
-    "stylelint-config-standard": "18.0.0",
+    "stylelint-config-standard": "18.1.0",
     "webpack": "3.11.0"
   },
   "config": {

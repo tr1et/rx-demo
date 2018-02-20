@@ -71,18 +71,6 @@ typings/
 !.vscode/extensions.json
 .history
 
-### Web ###
-*.asp
-*.cer
-*.csr
-*.htm
-*.html
-*.jsp
-*.php
-*.rss
-*.xhtml
-
-
 # End of https://www.gitignore.io/api/web,node,visualstudiocode
 
 dist
