@@ -59,7 +59,7 @@ export class Post extends Component {
     // The changes to `likes` multiplied with streak factor
     const multipliedChangesToLikesState$ = this.likesOrDislikes$.withLatestFrom(
       this.likeStreaks$,
-      this.getMultipliedChangeOfLikes,
+      this.getMultipliedChangeOfLikes
     );
 
     // Start a buffer of changes to `likes` state at the beginning
@@ -81,7 +81,7 @@ export class Post extends Component {
       .merge(
         this.rxStateLikes$.map(likes => ({ likes })),
         this.likeStreaks$.map(streak => ({ streak })),
-        bufferedChangesToLikesState$.merge(this.stopLikesOrDislikes$).map(buffer => ({ buffer })),
+        bufferedChangesToLikesState$.merge(this.stopLikesOrDislikes$).map(buffer => ({ buffer }))
       )
       .scan((state, newState) => ({ ...state, ...newState }), {})
       .debounceTime(0)
@@ -204,7 +204,7 @@ export class Post extends Component {
   getLikeStreakZoom = streak =>
     clamp(
       Math.floor(streak / LIKE_STREAK_MULTIPLY_FACTOR),
-      LIKE_STREAK_SPAN_MAXIMUM_ZOOM - LIKE_STREAK_SPAN_MINIMUM_ZOOM,
+      LIKE_STREAK_SPAN_MAXIMUM_ZOOM - LIKE_STREAK_SPAN_MINIMUM_ZOOM
     ) + LIKE_STREAK_SPAN_MINIMUM_ZOOM;
 
   /**

@@ -1,0 +1,106 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`post.snapshot.test.js HTML of component in like streak state 1`] = `
+
+<div class="ant-card ant-card-bordered">
+  <div class="ant-card-cover">
+    <img alt="poster"
+         src="http://lorempixel.com/640/480"
+    >
+  </div>
+  <div class="ant-card-body">
+    <div class="ant-card-meta">
+      <div class="ant-card-meta-avatar">
+        <span class="ant-avatar ant-avatar-lg ant-avatar-circle ant-avatar-image">
+          <img src="http://lorempixel.com/640/480">
+        </span>
+      </div>
+      <div class="ant-card-meta-detail">
+        <div class="ant-card-meta-title">
+          Lilly Schumm III
+        </div>
+        <div class="ant-card-meta-description">
+          Repellendus est dolor eos enim voluptatem ad.
+        </div>
+      </div>
+    </div>
+  </div>
+  <ul class="ant-card-actions">
+    <li style="width: 33.333333333333336%;">
+      <span>
+        <i class="anticon anticon-like-o post__like-button">
+        </i>
+      </span>
+    </li>
+    <li style="width: 33.333333333333336%;">
+      <span>
+        <span>
+          <span class="post__streak z2 center absolute inline-block green">
+            x25
+          </span>
+          <span class="post__likes-count center">
+            +200
+          </span>
+        </span>
+      </span>
+    </li>
+    <li style="width: 33.333333333333336%;">
+      <span>
+        <i class="anticon anticon-dislike-o post__dislike-button">
+        </i>
+      </span>
+    </li>
+  </ul>
+</div>
+
+`;
+
+exports[`post.snapshot.test.js HTML of component in normal state 1`] = `
+
+<div class="ant-card ant-card-bordered">
+  <div class="ant-card-cover">
+    <img alt="poster"
+         src="http://lorempixel.com/640/480"
+    >
+  </div>
+  <div class="ant-card-body">
+    <div class="ant-card-meta">
+      <div class="ant-card-meta-avatar">
+        <span class="ant-avatar ant-avatar-lg ant-avatar-circle ant-avatar-image">
+          <img src="http://lorempixel.com/640/480">
+        </span>
+      </div>
+      <div class="ant-card-meta-detail">
+        <div class="ant-card-meta-title">
+          Lilly Schumm III
+        </div>
+        <div class="ant-card-meta-description">
+          Repellendus est dolor eos enim voluptatem ad.
+        </div>
+      </div>
+    </div>
+  </div>
+  <ul class="ant-card-actions">
+    <li style="width: 33.333333333333336%;">
+      <span>
+        <i class="anticon anticon-like-o post__like-button">
+        </i>
+      </span>
+    </li>
+    <li style="width: 33.333333333333336%;">
+      <span>
+        <span class="post__likes-count center">
+          +120
+        </span>
+      </span>
+    </li>
+    <li style="width: 33.333333333333336%;">
+      <span>
+        <i class="anticon anticon-dislike-o post__dislike-button">
+        </i>
+      </span>
+    </li>
+  </ul>
+</div>
+
+`;

@@ -17,6 +17,16 @@ module.exports = {
             'function-paren-newline': ['error', 'multiline'],
             'object-curly-newline': ['error', { multiline: true }],
             'no-underscore-dangle': ['error', { allowAfterThis: true, allowAfterSuper: true }],
+            'comma-dangle': [
+              'error',
+              {
+                arrays: 'always-multiline',
+                objects: 'always-multiline',
+                imports: 'always-multiline',
+                exports: 'always-multiline',
+                functions: 'never',
+              },
+            ],
           },
         },
       },
@@ -29,7 +39,15 @@ module.exports = {
         },
       },
     ],
-    '@neutrinojs/jest',
+    [
+      '@neutrinojs/jest',
+      {
+        setupTestFrameworkScriptFile: '<rootDir>/configs/tests/setup-framework.js',
+        setupFiles: ['<rootDir>/configs/tests/setup-environment.js'],
+        coverageDirectory: path.resolve(__dirname, 'coverage'),
+        snapshotSerializers: ['jest-serializer-html'],
+      },
+    ],
     [
       '@neutrinojs/stylelint',
       {
@@ -55,7 +73,9 @@ module.exports = {
     ],
     '@neutrinojs/image-loader',
     neutrino => {
-      neutrino.config.resolve.modules.add(path.resolve(__dirname, 'src'));
+      neutrino.config.resolve.modules
+        .add(path.resolve(__dirname, 'src'))
+        .add(path.resolve(__dirname, 'configs'));
     },
   ],
   env: {
