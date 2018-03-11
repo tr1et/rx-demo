@@ -24,6 +24,21 @@ const defaultProps = {
 };
 let marbles = null;
 
+// const componenWillMountTest = () => {
+//   describe('componentWillMount()', () => {
+//     describe('Fire changesLikes action when likes streak end', () => {
+//       const values = { l: 1, d: -1 };
+
+//       test('Fire changes likes action', ({ likesOrDislikes }) => {
+//         // arrange
+//         const likesOrDislikes$ = marbles.hot(likesOrDislikes, values);
+//         const expected
+
+//       });
+//     });
+//   });
+// };
+
 const rxStateLikes$Test = () => {
   describe('rxStateLikes$', () => {
     const values = { a: 10, b: 20, c: 30, d: 40 };
@@ -318,6 +333,76 @@ const likeStreaks$Test = () => {
   });
 };
 
+const bufferedChangesToLikesState$Test = () => {
+  describe('bufferedChangesToLikesState$', () => {
+    const likesOrDislikesValues = { l: 1, d: -1 };
+    let sandbox = null;
+
+    beforeEach(() => {
+      sandbox = stubOperatorsWithScheduler(marbles.scheduler);
+    });
+
+    afterEach(() => {
+      sandbox.restore();
+    });
+
+    each([
+      [
+        {
+          likesOrDislikes: '    ^-lll-...27...---...12...---...12...--lllllllllll-',
+          expected: '           --abc-...27...---...12...---...12...--defghijklmn-',
+          expectedValues: {
+            a: 1,
+            b: 2,
+            c: 3,
+            d: 1,
+            e: 2,
+            f: 3,
+            g: 4,
+            h: 5,
+            i: 6,
+            j: 7,
+            k: 8,
+            l: 9,
+            m: 11,
+            n: 13,
+          },
+        },
+      ],
+    ]).it(
+      'Return the accumulated likes changes when user stop',
+      ({ likesOrDislikes, expected, expectedValues }) => {
+        // arrange
+        const likesOrDislikes$ = marbles.hot(likesOrDislikes, likesOrDislikesValues);
+        const expectedResult = marbles.e(expected, expectedValues);
+
+        // act
+        const wrapper = mount(<Post {...defaultProps} />);
+        const instance = wrapper.instance();
+        const likesOrDislikes$Stub = sinon
+          .stub(instance, 'likesOrDislikes$')
+          .get(() => likesOrDislikes$);
+
+        /* eslint-disable */
+        instance._bufferedChangesToLikesState$ = null;
+        instance._stopLikesOrDislikes$ = null;
+        instance._likeStreaks$ = null;
+        /* eslint-enable */
+
+        const result = marbles.getMessages(instance.bufferedChangesToLikesState$);
+
+        marbles.flush();
+
+        // assert
+        marbleAssert(result).to.equal(expectedResult);
+
+        // restore
+        likesOrDislikes$Stub.restore();
+      }
+    );
+  });
+};
+
 describe('post.behavior.test.js', () => {
   beforeEach(() => {
     marbles = rxSandbox.create(false, 10);
@@ -327,4 +412,5 @@ describe('post.behavior.test.js', () => {
   likesOrDislikes$Test();
   stopLikesOrDislikes$Test();
   likeStreaks$Test();
+  bufferedChangesToLikesState$Test();
 });

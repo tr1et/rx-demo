@@ -56,33 +56,19 @@ export class Post extends Component {
    * @memberOf Post
    */
   componentWillMount() {
-    // The changes to `likes` multiplied with streak factor
-    const multipliedChangesToLikesState$ = this.likesOrDislikes$.withLatestFrom(
-      this.likeStreaks$,
-      this.getMultipliedChangeOfLikes
-    );
-
-    // Start a buffer of changes to `likes` state at the beginning
-    // and reset everytime the streak end
-    const bufferedChangesToLikesState$ = Observable.of('START')
-      .merge(this.stopLikesOrDislikes$)
-      .switchMap(() => multipliedChangesToLikesState$.scan((buffer, change) => buffer + change, 0))
-      .share();
-
     // Dispatch the buffered `likes` changes to Rx store when the streak end
     // Used to reduce update requests to Rx state.
-    bufferedChangesToLikesState$
+    this.bufferedChangesToLikesState$
       .audit(() => this.stopLikesOrDislikes$)
       .subscribe(this.props.rxActions.changeLikes);
 
     // Update component state based on Rx `likes` state, the like streak and the current buffered
     // change
-    Observable
-      .merge(
-        this.rxStateLikes$.map(likes => ({ likes })),
-        this.likeStreaks$.map(streak => ({ streak })),
-        bufferedChangesToLikesState$.merge(this.stopLikesOrDislikes$).map(buffer => ({ buffer }))
-      )
+    Observable.merge(
+      this.rxStateLikes$.map(likes => ({ likes })),
+      this.likeStreaks$.map(streak => ({ streak })),
+      this.bufferedChangesToLikesState$.merge(this.stopLikesOrDislikes$).map(buffer => ({ buffer }))
+    )
       .scan((state, newState) => ({ ...state, ...newState }), {})
       .debounceTime(0)
       .subscribe(newState => this.setState(newState));
@@ -103,6 +89,7 @@ export class Post extends Component {
   /**
    * The observable of `likes` state in Rx state
    *
+   * @returns {Observable}
    * @readonly
    *
    * @memberOf Post
@@ -115,6 +102,7 @@ export class Post extends Component {
    * The observable of changes to `likes` state, includes both "like" and "dislike".
    * It doesn't actually changes the `likes` state
    *
+   * @returns {Observable}
    * @readonly
    *
    * @memberOf Post
@@ -134,6 +122,7 @@ export class Post extends Component {
    * The observable of the ends of like streak
    * Emits when the the user stop like/dislike for a specified time
    *
+   * @returns {Observable}
    * @readonly
    *
    * @memberOf Post
@@ -153,6 +142,7 @@ export class Post extends Component {
    * Observable of like streaks.
    * A like streak is is a range of likes/dislikes in a short time
    *
+   * @returns {Observable}
    * @readonly
    *
    * @memberOf Post
@@ -168,16 +158,45 @@ export class Post extends Component {
 
       // The streak will decrease gradually when user stop like/dislike
       this.stopLikesOrDislikes$
-        .switchMap(() => Observable
-          .interval(LIKE_STREAK_DECREASE_TIME)
-          .mapTo(-1)
-          .takeUntil(likeStreakIsEmpty$.merge(this.likesOrDislikes$)))
+        .switchMap(() =>
+          Observable.interval(LIKE_STREAK_DECREASE_TIME)
+            .mapTo(-1)
+            .takeUntil(likeStreakIsEmpty$.merge(this.likesOrDislikes$)))
         .subscribe(likesObserver$);
 
       this._likeStreaks$ = likeStreak$;
     }
 
     return this._likeStreaks$;
+  }
+
+  /**
+   * Start a buffer of changes to `likes` state at the beginning and reset everytime the likes
+   * streak end. The value of the changes is increased proportionally to the like streak count.
+   *
+   * @returns {Observable}
+   * @readonly
+   *
+   * @memberOf Post
+   */
+  get bufferedChangesToLikesState$() {
+    if (!this._bufferedChangesToLikesState$) {
+      // The changes to `likes` multiplied with streak count
+      const multipliedChangesToLikesState$ = this.likesOrDislikes$.withLatestFrom(
+        this.likeStreaks$,
+        this.getMultipliedChangeOfLikes
+      );
+
+      // Start a buffer of changes to `likes` state at the beginning
+      // and reset everytime the streak end
+      this._bufferedChangesToLikesState$ = Observable.of('START')
+        .merge(this.stopLikesOrDislikes$)
+        .switchMap(() =>
+          multipliedChangesToLikesState$.scan((buffer, change) => buffer + change, 0))
+        .share();
+    }
+
+    return this._bufferedChangesToLikesState$;
   }
 
   /**
